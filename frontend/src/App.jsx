@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from './api.js';
+import LoginPage from './components/LoginPage.jsx';
 import Header from './components/Header.jsx';
 import PortfolioHero from './components/PortfolioHero.jsx';
 import WithdrawalForm from './components/WithdrawalForm.jsx';
@@ -7,60 +8,53 @@ import HistoryTable from './components/HistoryTable.jsx';
 import './App.css';
 
 export default function App() {
-  const [investors, setInvestors] = useState([]);
-  const [investorId, setInvestorId] = useState(null);
+  const [investor, setInvestor] = useState(null); // the "logged in" investor, or null
   const [portfolio, setPortfolio] = useState(null);
   const [history, setHistory] = useState([]);
   const [loadError, setLoadError] = useState(null);
 
-  // Initial load: fetch investors, default to the first one.
   useEffect(() => {
-    api
-      .getInvestors()
-      .then((data) => {
-        setInvestors(data);
-        if (data.length > 0) {
-          setInvestorId(data[0].id);
-        }
-      })
-      .catch((err) =>
-        setLoadError(`Could not load data from the server: ${err.message}. Is the backend running on http://localhost:8080?`)
-      );
-  }, []);
-
-  // Whenever the selected investor changes, load their portfolio + history.
-  useEffect(() => {
-    if (investorId == null) return;
+    if (!investor) return;
 
     setLoadError(null);
-    Promise.all([api.getPortfolio(investorId), api.getWithdrawalHistory(investorId)])
+    Promise.all([api.getPortfolio(investor.id), api.getWithdrawalHistory(investor.id)])
       .then(([portfolioData, historyData]) => {
         setPortfolio(portfolioData);
         setHistory(historyData);
       })
       .catch((err) => setLoadError(`Could not load investor data: ${err.message}`));
-  }, [investorId]);
+  }, [investor]);
 
   async function refreshInvestorData() {
     const [portfolioData, historyData] = await Promise.all([
-      api.getPortfolio(investorId),
-      api.getWithdrawalHistory(investorId)
+      api.getPortfolio(investor.id),
+      api.getWithdrawalHistory(investor.id)
     ]);
     setPortfolio(portfolioData);
     setHistory(historyData);
   }
 
   async function handleWithdrawalSubmit(productId, amount) {
-    await api.createWithdrawal(investorId, productId, amount);
+    await api.createWithdrawal(investor.id, productId, amount);
     await refreshInvestorData();
   }
 
-  const investor = investors.find((inv) => inv.id === investorId);
-  const investorName = investor ? `${investor.firstName} ${investor.lastName}` : '';
+  function handleLogout() {
+    setInvestor(null);
+    setPortfolio(null);
+    setHistory([]);
+    setLoadError(null);
+  }
+
+  if (!investor) {
+    return <LoginPage onLoggedIn={setInvestor} />;
+  }
+
+  const investorName = `${investor.firstName} ${investor.lastName}`;
 
   return (
     <>
-      <Header investors={investors} investorId={investorId} onChange={setInvestorId} />
+      <Header investorName={investorName} onLogout={handleLogout} />
 
       <main className="wrap">
         {loadError && <div className="feedback feedback--error" style={{ marginTop: 24 }}>{loadError}</div>}
@@ -68,8 +62,17 @@ export default function App() {
         {portfolio && (
           <>
             <PortfolioHero investorName={investorName} products={portfolio.products} />
-            <WithdrawalForm products={portfolio.products} onSubmit={handleWithdrawalSubmit} />
-            <HistoryTable notices={history} investorId={investorId} />
+            {portfolio.products.length > 0 ? (
+              <WithdrawalForm products={portfolio.products} onSubmit={handleWithdrawalSubmit} />
+            ) : (
+              <section className="panel">
+                <h2>Request a withdrawal</h2>
+                <p style={{ color: 'var(--ink-soft)', margin: 0 }}>
+                  No products in this portfolio yet -- nothing to withdraw from.
+                </p>
+              </section>
+            )}
+            <HistoryTable notices={history} investorId={investor.id} />
           </>
         )}
       </main>

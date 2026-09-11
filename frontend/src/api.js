@@ -43,6 +43,22 @@ export const api = {
     }).then(handleResponse);
   },
 
+  login(email) {
+    return fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    }).then(handleResponse);
+  },
+
+  register(firstName, lastName, dateOfBirth, email) {
+    return fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName, lastName, dateOfBirth, email })
+    }).then(handleResponse);
+  },
+
   buildExportUrl(investorId, status) {
     const url = new URL(`${API_BASE}/investors/${investorId}/withdrawals/export`);
     if (status) {
