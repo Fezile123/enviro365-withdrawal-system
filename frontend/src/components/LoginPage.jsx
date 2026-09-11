@@ -81,10 +81,6 @@ export default function LoginPage({ onLoggedIn }) {
             <button type="submit" className="button button--primary" disabled={submitting}>
               {submitting ? 'Logging in…' : 'Log in'}
             </button>
-            <p className="login-hint">
-              Try <code>thandiwe.nkosi@example.com</code> (71) or <code>sipho.dlamini@example.com</code> (40) —
-              seeded investors on opposite sides of the retirement age rule.
-            </p>
           </form>
         ) : (
           <form onSubmit={handleRegister}>
@@ -119,7 +115,6 @@ export default function LoginPage({ onLoggedIn }) {
             <button type="submit" className="button button--primary" disabled={submitting}>
               {submitting ? 'Registering…' : 'Register'}
             </button>
-            <p className="login-hint">New investors start with an empty portfolio (no products yet).</p>
           </form>
         )}
 
