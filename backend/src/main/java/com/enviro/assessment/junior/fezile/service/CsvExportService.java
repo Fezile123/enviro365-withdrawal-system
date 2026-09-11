@@ -71,9 +71,14 @@ public class CsvExportService {
                                                     WithdrawalStatus status,
                                                     LocalDateTime from,
                                                     LocalDateTime to) {
-        if (from != null && to != null) {
+        if (from != null || to != null) {
+            // Default an unset bound so a one-sided filter (e.g. "from" with
+            // no "to") still works, rather than being silently ignored.
+            LocalDateTime effectiveFrom = from != null ? from : LocalDateTime.MIN;
+            LocalDateTime effectiveTo = to != null ? to : LocalDateTime.now();
+
             List<WithdrawalNotice> byDate = withdrawalNoticeRepository
-                    .findByInvestorIdAndCreatedAtBetween(investorId, from, to);
+                    .findByInvestorIdAndCreatedAtBetween(investorId, effectiveFrom, effectiveTo);
             return status == null ? byDate : byDate.stream()
                     .filter(n -> n.getStatus() == status)
                     .toList();
