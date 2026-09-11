@@ -19,6 +19,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -90,5 +92,33 @@ class CsvExportServiceTest {
         String[] lines = csv.strip().split("\\R");
 
         assertThat(lines).hasSize(1); // header only
+    }
+
+    @Test
+    void exportWithdrawalsAsCsv_fromOnly_stillAppliesDateFilter() {
+        LocalDateTime from = LocalDateTime.of(2026, 1, 1, 0, 0, 0);
+        when(investorRepository.existsById(1L)).thenReturn(true);
+        // "to" should be defaulted to "now" rather than the filter being skipped entirely
+        when(withdrawalNoticeRepository.findByInvestorIdAndCreatedAtBetween(
+                eq(1L), eq(from), any(LocalDateTime.class)))
+                .thenReturn(List.of(notice));
+
+        byte[] result = csvExportService.exportWithdrawalsAsCsv(1L, null, from, null);
+
+        assertThat(new String(result, StandardCharsets.UTF_8)).contains("Enviro365 Retirement Annuity");
+        verify(withdrawalNoticeRepository).findByInvestorIdAndCreatedAtBetween(eq(1L), eq(from), any());
+    }
+
+    @Test
+    void exportWithdrawalsAsCsv_toOnly_stillAppliesDateFilter() {
+        LocalDateTime to = LocalDateTime.of(2026, 12, 31, 23, 59, 59);
+        when(investorRepository.existsById(1L)).thenReturn(true);
+        when(withdrawalNoticeRepository.findByInvestorIdAndCreatedAtBetween(
+                eq(1L), any(LocalDateTime.class), eq(to)))
+                .thenReturn(List.of(notice));
+
+        csvExportService.exportWithdrawalsAsCsv(1L, null, null, to);
+
+        verify(withdrawalNoticeRepository).findByInvestorIdAndCreatedAtBetween(eq(1L), any(), eq(to));
     }
 }

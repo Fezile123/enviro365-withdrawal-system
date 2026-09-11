@@ -59,10 +59,16 @@ export const api = {
     }).then(handleResponse);
   },
 
-  buildExportUrl(investorId, status) {
+  buildExportUrl(investorId, status, from, to) {
     const url = new URL(`${API_BASE}/investors/${investorId}/withdrawals/export`);
     if (status) {
       url.searchParams.set('status', status);
+    }
+    if (from) {
+      url.searchParams.set('from', `${from}T00:00:00`);
+    }
+    if (to) {
+      url.searchParams.set('to', `${to}T23:59:59`);
     }
     return url.toString();
   }
