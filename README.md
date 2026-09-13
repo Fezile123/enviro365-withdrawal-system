@@ -16,6 +16,14 @@ business-rule validation.
 
 ![Portfolio dashboard](docs/screenshots/dashboard.png)
 
+**Business rule rejection** (withdrawal exceeding balance)
+
+![Business rule rejection](docs/screenshots/rejection.png)
+
+**Withdrawal history** (after a successful withdrawal)
+
+![Withdrawal history](docs/screenshots/history.png)
+
 ## Tech stack
 
 - **Backend:** Java 17, Spring Boot 3.3, Spring Data JPA, H2 (in-memory)
